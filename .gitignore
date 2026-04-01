@@ -121,9 +121,9 @@ dev.config.js
 # .gitignore itself can be committed but personal rules can be in .git/info/exclude
 .git/info/exclude
 
-git rm --cached .ARCHITECTURE.md
-git rm --cached .CHANGELOG.md
-git rm --cached .CONTRIBUTING.md
-git rm --cached FAQ.md
-git rm --cached .LICENSE
-git rm --cached SECURITY.md
+.ARCHITECTURE.md
+.CHANGELOG.md
+.CONTRIBUTING.md
+FAQ.md
+.LICENSE
+SECURITY.md
