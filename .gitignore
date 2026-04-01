@@ -1,0 +1,122 @@
+# EstudosIA .gitignore
+
+# 🔑 Chaves secretas
+.env
+.env.local
+.env.*.local
+api-keys.json
+secrets.txt
+
+# 🚫 Node/NPM (se integrar no futuro)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 🏗️ Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# 📝 IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 📦 VS Code
+*.code-workspace
+.vscode-test/
+
+# 🧪 Testing
+coverage/
+.nyc_output/
+test-results/
+
+# 📊 Logs
+logs/
+*.log
+
+# 🎨 Temp files
+*.bak
+*.tmp
+temp/
+tmp/
+
+# 🔒 OS specifics
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+.vscode-test
+
+# 📱 Mobile dev
+.android/
+.ios/
+
+# 💾 Database/Cache (if added later)
+*.db
+*.sqlite
+.cache/
+
+# 📦 Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 🎯 Project specific
+# Dados sensíveis do usuário
+user-data/
+private/
+
+# Screenshots de teste
+screenshots/
+
+# Documentação gerada automaticamente
+docs/_generated/
+docs/auto/
+
+# Arquivos de backup
+*.backup
+*.old
+
+# Compilados
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Comprimidos
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# IDE settings pessoais (não padrão)
+.editorconfig.personal
+.prettierrc.personal
+
+# Dependências locais
+/vendor/
+composer.lock
+
+# Configurações de desenvolvimento local
+local.config.js
+dev.config.js
+
+# Media não rastreado (opcional)
+# media/
+# *.mp4
+# *.mov
+
+# Dados de histórico grande (limpe regularmente)
+# history-backup/
+
+# .gitignore itself can be committed but personal rules can be in .git/info/exclude
+.git/info/exclude

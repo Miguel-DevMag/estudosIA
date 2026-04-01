@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><img src="img/logo.png" alt="logo">EstudosIA</div>
+    <nav class="nav">
+      <a href="index.html"><img src="img/dashboard.png" alt="Dashboard">Dashboard</a>
+      <a class="active" href="resumo.html"><img src="img/document.png" alt="Resumo">Resumo</a>
+      <a href="perguntas.html"><img src="img/file.png" alt="Perguntas">Perguntas</a>
+      <a href="flashcards.html"><img src="img/flash-cards.png" alt="Flashcards">Flashcards</a>
+      <a href="historico.html"><img src="img/file.png" alt="Histórico">Histórico</a>
+      <div class="nav-bottom">
+        <a href="configuracao.html"><img src="img/setting.png" alt="Configuração">Configuração</a>
+        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png" alt="Tema"><span id="theme-text">Dark</span></a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div class="title">Resumo</div>
+      <button class="btn secondary" onclick="toggleMenu()">Menu</button>
+    </div>
+    
+    <div class="card">
+      <h3>Resumo Gerado</h3>
+      <div class="output" id="output">Use o Dashboard para gerar um resumo.</div>
+      <button class="btn" onclick="copiarParaClipboard()" style="margin-top: 15px; width: 100%;">Copiar Resumo</button>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+      <h3>Últimos Resumos</h3>
+      <ul id="hist" class="list"></ul>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    function copiarParaClipboard(){
+      const text = document.getElementById('output').textContent;
+      navigator.clipboard.writeText(text);
+      alert('Resumo copiado!');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const results = JSON.parse(localStorage.getItem('estudos_resultados') || '{}');
+      if(results.resumo) document.getElementById('output').textContent = results.resumo.content;
+      renderHistory();
+    });
+  </script>
+</body>
+</html>

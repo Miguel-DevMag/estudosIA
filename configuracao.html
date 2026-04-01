@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <aside class="sidebar">
+    <div class="brand"><img src="img/logo.png" alt="logo">EstudosIA</div>
+    <nav class="nav">
+      <a href="index.html"><img src="img/dashboard.png" alt="Dashboard">Dashboard</a>
+      <a href="resumo.html"><img src="img/document.png" alt="Resumo">Resumo</a>
+      <a href="perguntas.html"><img src="img/file.png" alt="Perguntas">Perguntas</a>
+      <a href="flashcards.html"><img src="img/flash-cards.png" alt="Flashcards">Flashcards</a>
+      <a href="historico.html"><img src="img/file.png" alt="Histórico">Histórico</a>
+      <div class="nav-bottom">
+        <a class="active" href="configuracao.html"><img src="img/setting.png" alt="Configuração">Configuração</a>
+        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png" alt="Tema"><span id="theme-text">Dark</span></a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div class="title">Configurações</div>
+      <button class="btn secondary" onclick="toggleMenu()">Menu</button>
+    </div>
+
+    <div class="card">
+      <h3>Preferências</h3>
+
+      <div class="pref-item">
+        <label class="pref-label">
+          <input type="checkbox" id="notificacoes" onchange="savePreference('notificacoes', this.checked)">
+          <span>Ativar notificações</span>
+        </label>
+        <small class="pref-desc">Receba avisos ao gerar conteúdo</small>
+      </div>
+
+      <div class="pref-item">
+        <label class="pref-label">
+          <input type="checkbox" id="autoSave" onchange="savePreference('autoSave', this.checked)" checked>
+          <span>Salvar automaticamente</span>
+        </label>
+        <small class="pref-desc">Salvar materiais automaticamente</small>
+      </div>
+
+      <div class="pref-item">
+        <label>Limite de materiais salvos</label>
+        <select id="materialLimit" onchange="savePreference('materialLimit', this.value)" class="pref-select">
+          <option value="20">20 materiais</option>
+          <option value="50">50 materiais</option>
+          <option value="100">100 materiais</option>
+        </select>
+      </div>
+
+      <h3 class="h3-section">Dados</h3>
+      <button class="btn btn-full" onclick="exportarDados()">Exportar
+        Dados</button>
+      <button class="btn secondary btn-full" onclick="limparHistorico()">Limpar Histórico</button>
+      <button class="btn secondary btn-full btn-danger" onclick="limparTudo()">Limpar
+        Tudo</button>
+    </div>
+
+    <div class="card card-danger">
+      <h3 class="h3-danger">Informações do Sistema</h3>
+      <p class="p-system-info"><strong>Versão:</strong> 1.0.0</p>
+      <p class="p-system-info"><strong>Materiais salvos:</strong> <span id="matCount">0</span>
+      </p>
+      <p class="p-system-info"><strong>Histórico:</strong> <span id="histCount">0</span></p>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    function savePreference(key, value) {
+      const prefs = JSON.parse(localStorage.getItem('estudos_prefs') || '{}');
+      prefs[key] = value;
+      localStorage.setItem('estudos_prefs', JSON.stringify(prefs));
+    }
+
+    function loadPreferences() {
+      const prefs = JSON.parse(localStorage.getItem('estudos_prefs') || '{}');
+      if (document.getElementById('notificacoes')) document.getElementById('notificacoes').checked = prefs.notificacoes || false;
+      if (document.getElementById('autoSave')) document.getElementById('autoSave').checked = prefs.autoSave !== false;
+      if (document.getElementById('materialLimit')) document.getElementById('materialLimit').value = prefs.materialLimit || '50';
+      updateStats();
+    }
+
+    function updateStats() {
+      const materials = JSON.parse(localStorage.getItem('estudos_materiais') || '[]');
+      const hist = JSON.parse(localStorage.getItem('bf_hist') || '[]');
+      document.getElementById('matCount').textContent = materials.length;
+      document.getElementById('histCount').textContent = hist.length;
+    }
+
+    function exportarDados() {
+      const materials = localStorage.getItem('estudos_materiais');
+      const hist = localStorage.getItem('bf_hist');
+      const results = localStorage.getItem('estudos_resultados');
+      const data = { materiais: JSON.parse(materials || '[]'), historico: JSON.parse(hist || '[]'), resultados: JSON.parse(results || '{}') };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'estudos_backup_' + new Date().toISOString().split('T')[0] + '.json';
+      a.click();
+    }
+
+    function limparHistorico() {
+      if (confirm('Tem certeza que deseja limpar o histórico?')) {
+        localStorage.removeItem('bf_hist');
+        updateStats();
+        alert('Histórico limpo');
+      }
+    }
+
+    function limparTudo() {
+      if (confirm('AVISO: Isso vai limpar TODOS os dados! Tem certeza?')) {
+        localStorage.clear();
+        alert('Todos os dados foram limpos');
+        location.reload();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadPreferences);
+  </script>
+</body>
+
+</html>

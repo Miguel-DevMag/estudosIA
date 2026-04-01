@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EstudosIA • Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><img src="img/logo.png" alt="logo">EstudosIA</div>
+    <nav class="nav">
+      <a class="active" href="index.html"><img src="img/dashboard.png" alt="Dashboard">Dashboard</a>
+      <a href="resumo.html"><img src="img/document.png" alt="Resumo">Resumo</a>
+      <a href="perguntas.html"><img src="img/conversation.png" alt="Perguntas">Perguntas</a>
+      <a href="flashcards.html"><img src="img/flash-cards.png" alt="Flashcards">Flashcards</a>
+      <a href="historico.html"><img src="img/file.png" alt="Histórico">Histórico</a>
+      <div class="nav-bottom">
+        <a href="configuracao.html"><img src="img/setting.png" alt="Configuração">Configuração</a>
+        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png" alt="Tema"><span id="theme-text">Dark</span></a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div class="title">Dashboard • Estudo Inteligente</div>
+      <button class="btn secondary" onclick="toggleMenu()">Menu</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Entrada de Texto</h3>
+        
+        <textarea id="inputText" class="textarea" placeholder="Cole seu material de estudo aqui...&#10;Pode ser um artigo, anotação de aula ou qualquer texto que deseja estudar."></textarea>
+        <input type="file" id="pdfInput" class="pdf" accept="application/pdf">
+        <div class="actions">
+          <button class="btn" onclick="gerarResumo()">Gerar Resumo</button>
+          <button class="btn" onclick="gerarPerguntas()"> Gerar Perguntas</button>
+          <button class="btn" onclick="gerarFlashcards()">Gerar Flashcards</button>
+        </div>
+        <div id="loader" class="loader" style="display:none;margin-top:10px"></div>
+      </div>
+
+      <div class="card">
+        <h3>Resultado</h3>
+        <div id="output" class="output">Seu resultado aparecerá aqui...</div>
+        <button class="btn" onclick="copiarResultado()" style="margin-top: 15px; width: 100%;">Copiar Resultado</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    function copiarResultado(){
+      const text = document.getElementById('output').textContent;
+      if(text === 'Seu resultado aparecerá aqui...'){
+        alert('Gere um resultado primeiro');
+        return;
+      }
+      navigator.clipboard.writeText(text);
+      alert('Resultado copiado para a área de transferência!');
+    }
+  </script>
+</body>
+</html>
