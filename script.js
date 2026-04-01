@@ -255,6 +255,9 @@ Resumo:`;
   displayResult($('#output'), resumo);
   saveHistory('Resumo', resumo);
   saveResult('resumo', resumo);
+  
+  // Notificar se ativado
+  notifyIfEnabled('📄 Resumo gerado com sucesso!');
 }
 
 
@@ -265,44 +268,69 @@ async function gerarPerguntas() {
     return;
   }
   showLoader();
+  saveMaterial(text);
 
   // Corrigir erros de escrita do texto
   const correctedText = await corrigirTexto(text);
 
-  const prompt = `Crie um questionário com perguntas de múltipla escolha profundas baseadas no seguinte texto.
+  const prompt = `Crie um questionário com EXATAMENTE 5 perguntas de múltipla escolha profundas baseadas no seguinte texto.
 
-REQUISITOS:
-- Gere entre 4 e 6 perguntas de múltipla escolha
+REQUISITOS OBRIGATÓRIOS:
+- GERE EXATAMENTE 5 PERGUNTAS numeradas de 1 a 5
 - Cada pergunta deve ter 4 alternativas (A, B, C, D)
 - Apenas UMA resposta correta por pergunta
 - Inclua uma breve EXPLICAÇÃO para cada resposta correta
 - Use linguagem clara e objetiva
 
-FORMATO EXATO:
-Questionário sobre [TEMA PRINCIPAL]
+FORMATO EXATO - SIGA RIGOROSAMENTE:
+Questionário sobre [TEMA PRINCIPAL DO TEXTO]
 
-1. Pergunta em formato de questão?
-A) Alternativa 1
-B) Alternativa 2
-C) Alternativa 3
-D) Alternativa 4
+1. Primeira pergunta em formato de questão?
+A) Primeira alternativa
+B) Segunda alternativa
+C) Terceira alternativa
+D) Quarta alternativa
 
-2. Próxima pergunta?
-A) Alternativa 1
-B) Alternativa 2
-C) Alternativa 3
-D) Alternativa 4
+2. Segunda pergunta em formato de questão?
+A) Primeira alternativa
+B) Segunda alternativa
+C) Terceira alternativa
+D) Quarta alternativa
+
+3. Terceira pergunta em formato de questão?
+A) Primeira alternativa
+B) Segunda alternativa
+C) Terceira alternativa
+D) Quarta alternativa
+
+4. Quarta pergunta em formato de questão?
+A) Primeira alternativa
+B) Segunda alternativa
+C) Terceira alternativa
+D) Quarta alternativa
+
+5. Quinta pergunta em formato de questão?
+A) Primeira alternativa
+B) Segunda alternativa
+C) Terceira alternativa
+D) Quarta alternativa
 
 🔑 Gabarito / Respostas
-Resposta Correta: C
-Explicação: Breve explicação sobre por que C é correta
+Resposta Correta: A
+Explicação: Explicação clara e concisa sobre por que A é correta
 Resposta Correta: B
-Explicação: Breve explicação sobre por que B é correta
+Explicação: Explicação clara e concisa sobre por que B é correta
+Resposta Correta: C
+Explicação: Explicação clara e concisa sobre por que C é correta
+Resposta Correta: D
+Explicação: Explicação clara e concisa sobre por que D é correta
+Resposta Correta: A
+Explicação: Explicação clara e concisa sobre por que A é correta
 
 TEXTO:
 ${correctedText}
 
-Questionário:`;
+Agora prossiga com o questionário exatamente no formato mostrado acima:`;
 
   const perguntas = await callGeminiAI(prompt);
   const perguntasCorrigidas = await corrigirTexto(perguntas);
@@ -311,6 +339,9 @@ Questionário:`;
   displayResult($('#output'), perguntasFormatadas, true);
   saveHistory('Perguntas', perguntasCorrigidas, perguntasFormatadas);
   saveResult('perguntas', perguntasCorrigidas);
+  
+  // Notificar se ativado
+  notifyIfEnabled('✅ Perguntas geradas com sucesso!');
 }
 
 async function gerarFlashcards() {
@@ -356,6 +387,9 @@ ${text}`;
   
   saveHistory('Flashcards', flashcardsText, results.flashcards);
   saveResult('flashcards', flashcardsText);
+  
+  // Notificar se ativado
+  notifyIfEnabled('🎓 Flashcards gerados com sucesso!');
 }
 
 function formatFlashcardsOutput(cards) {
@@ -940,6 +974,67 @@ function formatarQuestionario(text) {
   html += '</div>';
   return html;
 }
+
+// Sistema de notificações
+function notifyIfEnabled(message) {
+  const prefs = JSON.parse(localStorage.getItem('estudos_prefs') || '{}');
+  if (prefs.notificacoes) {
+    // Notificação visual no topo da página
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #7c5cff, #9d7fff);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(124, 92, 255, 0.4);
+      font-weight: 600;
+      z-index: 10000;
+      animation: slideInRight 0.3s ease;
+    `;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+      notif.style.animation = 'slideOutRight 0.3s ease';
+      setTimeout(() => notif.remove(), 300);
+    }, 3000);
+    
+    // Notificação de som se suportado
+    try {
+      const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAA');
+      audio.play().catch(() => {});
+    } catch (e) {}
+  }
+}
+
+// Adicionar estilos de animação
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
 
 const pdfInput = document.getElementById('pdfInput');
 

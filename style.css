@@ -225,10 +225,33 @@ a {
 .output {
     white-space: pre-wrap;
     line-height: 1.6;
-    padding: 15px;
+    padding: 20px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 12px;
     transition: all 0.3s ease;
+    max-height: 600px;
+    overflow-y: auto;
+    color: var(--text);
+}
+
+/* Scroll profissional */
+.output::-webkit-scrollbar {
+    width: 8px;
+}
+
+.output::-webkit-scrollbar-track {
+    background: rgba(124, 92, 255, 0.1);
+    border-radius: 10px;
+}
+
+.output::-webkit-scrollbar-thumb {
+    background: #7c5cff;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.output::-webkit-scrollbar-thumb:hover {
+    background: #9d7fff;
 }
 
 .pref-item {

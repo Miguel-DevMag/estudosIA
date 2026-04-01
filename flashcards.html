@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
       justify-content: center;
       margin: 20px 0;
     }
+
     .flashcard-nav {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -21,11 +23,13 @@
       cursor: pointer;
       color: var(--text);
     }
+
     .flashcard-nav:hover {
       background: rgba(124, 92, 255, .12);
     }
   </style>
 </head>
+
 <body>
   <aside class="sidebar">
     <div class="brand"><img src="img/logo.png" alt="logo">EstudosIA</div>
@@ -37,7 +41,8 @@
       <a href="historico.html"><img src="img/file.png" alt="Histórico">Histórico</a>
       <div class="nav-bottom">
         <a href="configuracao.html"><img src="img/setting.png" alt="Configuração">Configuração</a>
-        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png" alt="Tema"><span id="theme-text">Dark</span></a>
+        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png"
+            alt="Tema"><span id="theme-text">Dark</span></a>
       </div>
     </nav>
   </aside>
@@ -50,9 +55,15 @@
 
     <div class="card">
       <h3>Seus Flashcards</h3>
-      <div id="flash" data-s="q" class="card flash" onclick="flip()" style="margin-top: 20px; cursor: pointer;">
-        Clique para começar → Use o Dashboard para gerar flashcards
+      <div id="flash" onclick="flip()"></div>
+
+      <div id="navButtons">
+        <button onclick="prevCard()">←</button>
+        <span id="cardCounter"></span>
+        <button onclick="nextCard()">→</button>
       </div>
+
+      <div id="cardsList"></div>
       <div class="flashcard-container" id="navButtons" style="display: none;">
         <button class="flashcard-nav" onclick="prevCard()">← Anterior</button>
         <span id="cardCounter" style="color: var(--muted);">0 / 0</span>
@@ -70,4 +81,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
