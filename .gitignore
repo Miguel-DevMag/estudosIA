@@ -73,6 +73,12 @@ pnpm-lock.yaml
 user-data/
 private/
 
+# Arquivos de documentação e configuração (não sincronizar)
+LICENSE
+CONTRIBUTING.md
+CHANGELOG.md
+ARCHITECTURE.md
+
 # Screenshots de teste
 screenshots/
 
