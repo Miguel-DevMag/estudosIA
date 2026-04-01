@@ -845,7 +845,7 @@ ${texto}`;
   }
 }
 
-// Função para formatar questionário novo (formato simplificado) - MELHORADO
+// Função para formatar questionário novo (formato simplificado) - ULTRA ROBUSTO
 function formatarQuestionarioSimplificado(text) {
   let limpo = text.replace(/```[\s\S]*?```/g, '');
   limpo = limpo.replace(/\*\*/g, '');
@@ -854,7 +854,25 @@ function formatarQuestionarioSimplificado(text) {
   const perguntas = [];
   const respostas = {};
 
-  // Dividir por linhas numeradas (1., 2., etc)
+  // Tentar duas estratégias de parsing
+  const resultado1 = tryParserV1(limpo, perguntas, respostas);
+  
+  // Se não funcionou, tentar segunda estratégia
+  if (perguntas.length === 0) {
+    tryParserV2(limpo, perguntas, respostas);
+  }
+
+  // Se ainda não funcionou, usar fallback
+  if (perguntas.length === 0) {
+    return fallbackQuestionario(text);
+  }
+
+  // Gerar HTML com sucesso
+  return renderQuestionarioHTML(perguntas, respostas);
+}
+
+// Parser V1: Linha por linha
+function tryParserV1(limpo, perguntas, respostas) {
   const linhas = limpo.split('\n');
   let perguntaAtual = null;
   let blocoAtual = '';
@@ -862,14 +880,11 @@ function formatarQuestionarioSimplificado(text) {
   for (let i = 0; i < linhas.length; i++) {
     const linha = linhas[i].trim();
     
-    // Detectar novo número de pergunta
     if (linha.match(/^(\d+)\.\s+/)) {
-      // Processar bloco anterior se existir
       if (perguntaAtual && blocoAtual) {
         processarBlocoPergunta(perguntaAtual, blocoAtual, perguntas, respostas);
       }
       
-      // Iniciar novo bloco
       const numMatch = linha.match(/^(\d+)\.\s+(.+)$/);
       if (numMatch) {
         perguntaAtual = {
@@ -879,26 +894,63 @@ function formatarQuestionarioSimplificado(text) {
         blocoAtual = '';
       }
     } else if (perguntaAtual && linha.length > 0) {
-      // Adicionar linha ao bloco
       blocoAtual += (blocoAtual ? '\n' : '') + linha;
     }
   }
 
-  // Processar último bloco
   if (perguntaAtual && blocoAtual) {
     processarBlocoPergunta(perguntaAtual, blocoAtual, perguntas, respostas);
   }
+  
+  return perguntas.length > 0;
+}
 
-  // Se não encontrou, tentar fallback
-  if (perguntas.length === 0) {
-    return fallbackQuestionario(text);
-  }
+// Parser V2: Procura por padrões de A), B), C), D)
+function tryParserV2(limpo, perguntas, respostas) {
+  const blocos = limpo.split(/\n(?=\d+\.)/);
+  
+  blocos.forEach(bloco => {
+    const numMatch = bloco.match(/^(\d+)\.\s*(.+?)(?:\n|$)/);
+    if (numMatch) {
+      const numero = numMatch[1];
+      const pergunta = numMatch[2].trim();
+      
+      const alternativas = [];
+      const altMatches = bloco.matchAll(/^([A-D])\)\s+(.+?)(?:\n|$)/gm);
+      
+      for (const match of altMatches) {
+        alternativas.push({
+          letra: match[1],
+          texto: match[2].trim()
+        });
+      }
+      
+      const respostaMatch = bloco.match(/Resposta\s*[:\-]\s*([A-D])/i);
+      const resposta = respostaMatch ? respostaMatch[1] : '';
+      
+      const explicacaoMatch = bloco.match(/Explicação\s*[:\-]\s*(.+?)(?:\n|$)/i);
+      const explicacao = explicacaoMatch ? explicacaoMatch[1].trim() : '';
+      
+      if (pergunta && alternativas.length === 4 && resposta && explicacao) {
+        perguntas.push({
+          numero: numero,
+          pergunta: pergunta,
+          alternativas: alternativas
+        });
+        respostas[numero] = {
+          letra: resposta,
+          explicacao: explicacao
+        };
+      }
+    }
+  });
+}
 
-  // Gerar HTML
+// Renderizar HTML final
+function renderQuestionarioHTML(perguntas, respostas) {
   let html = `<div style="font-family: Arial, sans-serif;">`;
   html += `<h2 style="color: #7c5cff; text-align: center; margin-bottom: 30px; font-size: 20px;">📚 Questionário (${perguntas.length} perguntas)</h2>`;
 
-  // Seção de perguntas
   perguntas.forEach((q) => {
     html += `
       <div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(124, 92, 255, 0.05)); 
@@ -921,7 +973,6 @@ function formatarQuestionarioSimplificado(text) {
     `;
   });
 
-  // Seção de gabarito
   if (Object.keys(respostas).length > 0) {
     html += `
       <div style="background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.05)); 
@@ -1005,20 +1056,39 @@ function processarBlocoPergunta(perguntaAtual, bloco, perguntas, respostas) {
   }
 }
 
-// Fallback se parser falhar
+// Fallback se parser falhar - mostra conteúdo limpo sem aviso
 function fallbackQuestionario(text) {
-  const lines = text.split('\n').filter(l => l.trim());
+  let limpo = text.replace(/```[\s\S]*?```/g, '').trim();
   
-  return `
-    <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0;">
-      <h3 style="color: #856404; margin-top: 0;">⚠️ Aviso de Formatação</h3>
-      <p style="color: #856404;">A IA retornou o conteúdo em um formato diferente. Aqui está o resultado:</p>
-      <div style="background: white; padding: 15px; border-radius: 4px; max-height: 600px; overflow-y: auto; line-height: 1.8; font-family: monospace; color: #333; white-space: pre-wrap; word-wrap: break-word;">
-        ${text.substring(0, 2000)}
-      </div>
-      <p style="color: #856404; margin-bottom: 0; font-size: 12px;">💡 Dica: Tente novamente com um texto diferente ou menor.</p>
-    </div>
-  `;
+  // Remover markdown
+  limpo = limpo.replace(/\*\*/g, '');
+  
+  // Dividir em parágrafos
+  const paragrafos = limpo.split('\n\n').filter(p => p.trim());
+  
+  let html = `<div style="font-family: Arial, sans-serif;">`;
+  html += `<h2 style="color: #7c5cff; text-align: center; margin-bottom: 30px; font-size: 20px;">📚 Questionário</h2>`;
+  
+  paragrafos.forEach(p => {
+    const trimmed = p.trim();
+    if (trimmed.match(/^[0-9]\./)) {
+      // É uma pergunta numerada
+      html += `<div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(124, 92, 255, 0.05)); border: 2px solid #7c5cff; border-radius: 12px; padding: 20px; margin-bottom: 20px;">`;
+      html += `<div style="color: #333; line-height: 1.8; font-size: 15px; white-space: pre-wrap; word-wrap: break-word;">${trimmed}</div>`;
+      html += `</div>`;
+    } else if (trimmed.match(/^Resposta|^Explicação|^🔑/i)) {
+      // É resposta ou explicação
+      html += `<div style="background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.05)); border-left: 4px solid #34d399; border-radius: 8px; padding: 15px; margin-bottom: 15px;">`;
+      html += `<div style="color: #34d399; font-weight: bold; font-size: 14px; margin-bottom: 8px;">🔑 ${trimmed.substring(0, 50)}</div>`;
+      html += `</div>`;
+    } else {
+      // Conteúdo genérico
+      html += `<div style="padding: 12px; margin-bottom: 12px; line-height: 1.8; color: #333; font-size: 14px; white-space: pre-wrap; word-wrap: break-word;">${trimmed}</div>`;
+    }
+  });
+  
+  html += '</div>';
+  return html;
 }
 
 // Função para formatar questionário antigo (mantida para compatibilidade)
