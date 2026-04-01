@@ -10,7 +10,7 @@
 [![Versão](https://img.shields.io/badge/Versão-1.0.0-blue)]() 
 [![Licença](https://img.shields.io/badge/Licença-MIT-green)]()
 
-[🌐 Demo](#demo) • [✨ Funcionalidades](#-funcionalidades) • [🚀 Começar](#-começar-rápido) • [📖 Documentação](#-documentação-detalhada)
+[🌐 Demo](https://estudos-ia.vercel.app/index.html) • [✨ Funcionalidades](#-funcionalidades) • [🚀 Começar](#-começar-rápido) • [📖 Documentação](#-documentação-detalhada)
 
 </div>
 
