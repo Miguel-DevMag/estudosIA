@@ -845,51 +845,53 @@ ${texto}`;
   }
 }
 
-// Função para formatar questionário novo (formato simplificado)
+// Função para formatar questionário novo (formato simplificado) - MELHORADO
 function formatarQuestionarioSimplificado(text) {
   let limpo = text.replace(/```[\s\S]*?```/g, '');
   limpo = limpo.replace(/\*\*/g, '');
   limpo = limpo.trim();
 
-  // Extrair perguntas individuais
-  const perguntasRegex = /(\d+)\.\s*\[?([^\]?\n]+)\]?\n([\s\S]*?)(?=\n\d+\.|$)/g;
-  let match;
   const perguntas = [];
   const respostas = {};
 
-  while ((match = perguntasRegex.exec(limpo)) !== null) {
-    const numero = match[1];
-    const pergunta = match[2].trim();
-    const bloco = match[3];
+  // Dividir por linhas numeradas (1., 2., etc)
+  const linhas = limpo.split('\n');
+  let perguntaAtual = null;
+  let blocoAtual = '';
 
-    // Extrair alternativas
-    const alternativasRegex = /([A-D])\)\s*([^\n]+)/g;
-    const alternativas = [];
-    let altMatch;
-    while ((altMatch = alternativasRegex.exec(bloco)) !== null) {
-      alternativas.push({
-        letra: altMatch[1],
-        texto: altMatch[2].trim()
-      });
-    }
-
-    // Extrair resposta correta
-    const respostaMatch = bloco.match(/Resposta\s*[:\-]\s*([A-D])/i);
-    const resposta = respostaMatch ? respostaMatch[1] : '';
-
-    // Extrair explicação
-    const explicacaoMatch = bloco.match(/Explicação\s*[:\-]\s*([^\n]+)/i);
-    const explicacao = explicacaoMatch ? explicacaoMatch[1].trim() : '';
-
-    if (pergunta && alternativas.length === 4 && resposta && explicacao) {
-      perguntas.push({ numero, pergunta, alternativas });
-      respostas[numero] = { letra: resposta, explicacao: explicacao };
+  for (let i = 0; i < linhas.length; i++) {
+    const linha = linhas[i].trim();
+    
+    // Detectar novo número de pergunta
+    if (linha.match(/^(\d+)\.\s+/)) {
+      // Processar bloco anterior se existir
+      if (perguntaAtual && blocoAtual) {
+        processarBlocoPergunta(perguntaAtual, blocoAtual, perguntas, respostas);
+      }
+      
+      // Iniciar novo bloco
+      const numMatch = linha.match(/^(\d+)\.\s+(.+)$/);
+      if (numMatch) {
+        perguntaAtual = {
+          numero: numMatch[1],
+          pergunta: numMatch[2]
+        };
+        blocoAtual = '';
+      }
+    } else if (perguntaAtual && linha.length > 0) {
+      // Adicionar linha ao bloco
+      blocoAtual += (blocoAtual ? '\n' : '') + linha;
     }
   }
 
-  // Se não encontrou, retornar mensagem
+  // Processar último bloco
+  if (perguntaAtual && blocoAtual) {
+    processarBlocoPergunta(perguntaAtual, blocoAtual, perguntas, respostas);
+  }
+
+  // Se não encontrou, tentar fallback
   if (perguntas.length === 0) {
-    return '<div style="color: #ff4757; padding: 20px; text-align: center;"><strong>❌ Erro ao gerar perguntas. Tente novamente.</strong></div>';
+    return fallbackQuestionario(text);
   }
 
   // Gerar HTML
@@ -950,6 +952,73 @@ function formatarQuestionarioSimplificado(text) {
 
   html += '</div>';
   return html;
+}
+
+// Função auxiliar para processar bloco de pergunta
+function processarBlocoPergunta(perguntaAtual, bloco, perguntas, respostas) {
+  const alternativas = [];
+  let resposta = '';
+  let explicacao = '';
+
+  const linhas = bloco.split('\n');
+  for (let i = 0; i < linhas.length; i++) {
+    const linha = linhas[i].trim();
+    
+    // Extrair alternativas (A), B), C), D))
+    if (linha.match(/^[A-D]\)\s+/)) {
+      const match = linha.match(/^([A-D])\)\s*(.+)$/);
+      if (match) {
+        alternativas.push({
+          letra: match[1],
+          texto: match[2]
+        });
+      }
+    }
+    
+    // Extrair resposta
+    else if (linha.match(/^Resposta\s*[:\-]/i)) {
+      const match = linha.match(/([A-D])/);
+      if (match) resposta = match[1];
+    }
+    
+    // Extrair explicação
+    else if (linha.match(/^Explicação\s*[:\-]/i)) {
+      explicacao = linha.replace(/^Explicação\s*[:\-]\s*/i, '').trim();
+      // Se vazio, pega próxima linha
+      if (!explicacao && i + 1 < linhas.length) {
+        explicacao = linhas[i + 1].trim();
+      }
+    }
+  }
+
+  // Validar e adicionar
+  if (perguntaAtual.pergunta && alternativas.length === 4 && resposta && explicacao) {
+    perguntas.push({
+      numero: perguntaAtual.numero,
+      pergunta: perguntaAtual.pergunta,
+      alternativas: alternativas
+    });
+    respostas[perguntaAtual.numero] = {
+      letra: resposta,
+      explicacao: explicacao
+    };
+  }
+}
+
+// Fallback se parser falhar
+function fallbackQuestionario(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  
+  return `
+    <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="color: #856404; margin-top: 0;">⚠️ Aviso de Formatação</h3>
+      <p style="color: #856404;">A IA retornou o conteúdo em um formato diferente. Aqui está o resultado:</p>
+      <div style="background: white; padding: 15px; border-radius: 4px; max-height: 600px; overflow-y: auto; line-height: 1.8; font-family: monospace; color: #333; white-space: pre-wrap; word-wrap: break-word;">
+        ${text.substring(0, 2000)}
+      </div>
+      <p style="color: #856404; margin-bottom: 0; font-size: 12px;">💡 Dica: Tente novamente com um texto diferente ou menor.</p>
+    </div>
+  `;
 }
 
 // Função para formatar questionário antigo (mantida para compatibilidade)
