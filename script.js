@@ -32,7 +32,7 @@ function updateThemeButton() {
   const isLight = document.body.classList.contains('light');
   const themeIcon = document.getElementById('theme-icon');
   const themeText = document.getElementById('theme-text');
-  
+
   if (themeIcon) {
     themeIcon.src = isLight ? 'img/brightness.png' : 'img/night-mode.png';
     themeIcon.alt = isLight ? 'Luz' : 'Tema';
@@ -55,9 +55,14 @@ function getMaterials() {
 }
 
 
-function saveHistory(type, content) {
+function saveHistory(type, content, contentFormatted = content) {
   const h = JSON.parse(localStorage.getItem('bf_hist') || '[]');
-  h.unshift({ t: Date.now(), type: type, v: content });
+  h.unshift({
+    t: Date.now(),
+    type: type,
+    v: content,
+    vFormatted: contentFormatted
+  });
   localStorage.setItem('bf_hist', JSON.stringify(h.slice(0, 50)));
   renderHistory();
 }
@@ -72,40 +77,67 @@ function renderHistory() {
   const el = document.getElementById('hist');
   if (!el) return;
 
-  const h = JSON.parse(localStorage.getItem('bf_hist') || []);
+  const h = JSON.parse(localStorage.getItem('bf_hist') || '[]');
   let tipoPagina = '';
 
   if (window.location.href.includes('resumo.html')) tipoPagina = 'Resumo';
   else if (window.location.href.includes('perguntas.html')) tipoPagina = 'Perguntas';
   else if (window.location.href.includes('flashcards.html')) tipoPagina = 'Flashcards';
+ const filtrado = h
+  .map((item, index) => ({ ...item, originalIndex: index }))
+  .filter(i => i.type === tipoPagina);
 
-  const filtrado = h.filter(i => i.type === tipoPagina);
-
-  el.innerHTML = filtrado.map(i =>
-    `<li><strong>${i.type}</strong> — ${new Date(i.t).toLocaleString()}</li>`
-  ).join('');
+  el.innerHTML = filtrado.map((i) =>
+  `<li onclick="loadHistoricResult(${i.originalIndex}, '${tipoPagina}')"
+      style="cursor: pointer;">
+    <strong>${i.type}</strong> — ${new Date(i.t).toLocaleString()}
+  </li>`
+).join('');
 }
 
-function renderResults() {
-  const resultDiv = document.getElementById('output');
-  if (!resultDiv) return;
-  const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
-  if (resultDiv.id === 'output' && window.location.href.includes('resumo.html')) {
-    if (results.resumo) {
-      displayResult(resultDiv, results.resumo.content);
-    } else {
-      resultDiv.textContent = 'Use o Dashboard para gerar.';
-    }
-  } else if (resultDiv.id === 'output' && window.location.href.includes('perguntas.html')) {
-    if (results.perguntas) {
-      const perguntasFormatadas = formatarPerguntasMultipla(results.perguntas.content);
-      displayResult(resultDiv, perguntasFormatadas, true);
-    } else {
-      resultDiv.textContent = 'Use o Dashboard para gerar.';
+function loadHistoricResult(idx, type) {
+  const h = JSON.parse(localStorage.getItem('bf_hist') || '[]');
+  if (h[idx]) {
+    const item = h[idx];
+    const resultDiv = document.getElementById('output');
+    if (!resultDiv) return;
+
+    if (type === 'Perguntas') {
+      const formatted = formatarQuestionario(item.v);
+      displayResult(resultDiv, formatted, true);
+    } else if (type === 'Resumo') {
+      displayResult(resultDiv, item.v);
+    } else if (type === 'Flashcards') {
+      const cards = item.vFormatted?.cards || [];
+      if (cards.length > 0) {
+        const flash = document.getElementById('flash');
+        if (flash) {
+          const firstCard = cards[0];
+          flash.innerHTML = `
+            <div style="text-align: left; width: 100%; cursor: pointer;" id="flash-content">
+              <div style="color: var(--muted); font-size: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 18px;">📍</span>
+                <span>Card 1/${cards.length}</span>
+              </div>
+              <div style="margin-bottom: 20px;">
+                <div style="color: var(--primary); font-weight: bold; margin-bottom: 8px; font-size: 14px;">❓ Pergunta:</div>
+                <div style="color: var(--text); line-height: 1.8; font-size: 16px;">${firstCard.pergunta}</div>
+              </div>
+              <div style="border-top: 1px solid var(--border); padding-top: 20px; transition: all 0.3s ease; opacity: 0; pointer-events: none;" id="flash-answer-0">
+                <div style="color: var(--primary); font-weight: bold; margin-bottom: 8px; font-size: 14px;">✅ Resposta:</div>
+                <div style="color: var(--text); line-height: 1.8; font-size: 16px;">${firstCard.resposta}</div>
+              </div>
+              <div style="color: var(--muted); font-size: 12px; margin-top: 20px; text-align: center; font-style: italic;">🔄 Clique para virar</div>
+            </div>
+          `;
+          flash.dataset.s = 'q';
+          flash.dataset.index = 0;
+          flash.style.cursor = 'pointer';
+        }
+      }
     }
   }
 }
-
 
 function showLoader() {
   const bar = document.getElementById('loader');
@@ -233,35 +265,52 @@ async function gerarPerguntas() {
     return;
   }
   showLoader();
-  const prompt = `Crie perguntas de múltipla escolha profundas e significativas baseadas no seguinte texto.
+
+  // Corrigir erros de escrita do texto
+  const correctedText = await corrigirTexto(text);
+
+  const prompt = `Crie um questionário com perguntas de múltipla escolha profundas baseadas no seguinte texto.
 
 REQUISITOS:
-- Gere entre 5 e 8 perguntas de múltipla escolha sobre os conceitos principais
-- Cada pergunta deve ter 5 alternativas (A, B, C, D, E)
+- Gere entre 4 e 6 perguntas de múltipla escolha
+- Cada pergunta deve ter 4 alternativas (A, B, C, D)
 - Apenas UMA resposta correta por pergunta
-- As perguntas devem variar em dificuldade
+- Inclua uma breve EXPLICAÇÃO para cada resposta correta
 - Use linguagem clara e objetiva
-- Explore conceitos conceituais, analíticos e aplicados
 
-FORMATO EXATO para cada pergunta:
-NÚMERO. Pergunta?
+FORMATO EXATO:
+Questionário sobre [TEMA PRINCIPAL]
+
+1. Pergunta em formato de questão?
 A) Alternativa 1
 B) Alternativa 2
 C) Alternativa 3
 D) Alternativa 4
-E) Alternativa 5
-Resposta Correta: (Letra)
+
+2. Próxima pergunta?
+A) Alternativa 1
+B) Alternativa 2
+C) Alternativa 3
+D) Alternativa 4
+
+🔑 Gabarito / Respostas
+Resposta Correta: C
+Explicação: Breve explicação sobre por que C é correta
+Resposta Correta: B
+Explicação: Breve explicação sobre por que B é correta
 
 TEXTO:
-${text}
+${correctedText}
 
-Perguntas:`;
+Questionário:`;
+
   const perguntas = await callGeminiAI(prompt);
+  const perguntasCorrigidas = await corrigirTexto(perguntas);
   hideLoader();
-  const perguntasFormatadas = formatarPerguntasMultipla(perguntas);
+  const perguntasFormatadas = formatarQuestionario(perguntasCorrigidas);
   displayResult($('#output'), perguntasFormatadas, true);
-  saveHistory('Perguntas', perguntas);
-  saveResult('perguntas', perguntas);
+  saveHistory('Perguntas', perguntasCorrigidas, perguntasFormatadas);
+  saveResult('perguntas', perguntasCorrigidas);
 }
 
 async function gerarFlashcards() {
@@ -288,6 +337,11 @@ ${text}`;
   // Parsear flashcards
   const flashcards = parseFlashcards(flashcardsText);
   
+  if (flashcards.length === 0) {
+    alert('Erro ao gerar flashcards. Tente novamente.');
+    return;
+  }
+  
   // Salvar estruturado
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
   results.flashcards = { 
@@ -300,21 +354,20 @@ ${text}`;
   // Exibir formatado no dashboard
   $('#output').innerHTML = formatFlashcardsOutput(flashcards);
   
-  saveHistory('Flashcards', flashcardsText);
+  saveHistory('Flashcards', flashcardsText, results.flashcards);
   saveResult('flashcards', flashcardsText);
-  renderFlashcards();
 }
 
 function formatFlashcardsOutput(cards) {
   if (!cards || cards.length === 0) {
     return '<p style="color: var(--muted); text-align: center; padding: 20px;">Nenhum flashcard gerado.</p>';
   }
-  
+
   let html = `<div style="color: var(--muted); margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
     <span style="font-size: 20px;">📚</span>
     <span><strong>Total: ${cards.length} flashcards gerados</strong></span>
   </div>`;
-  
+
   cards.forEach((card, idx) => {
     html += `
       <div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.15), rgba(124, 92, 255, 0.05)); border-left: 4px solid var(--primary); border-radius: 8px; padding: 16px; margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
@@ -333,7 +386,7 @@ function formatFlashcardsOutput(cards) {
       </div>
     `;
   });
-  
+
   return html;
 }
 
@@ -341,14 +394,14 @@ function parseFlashcards(text) {
   const cards = [];
   const regex = /Pergunta:\s*(.+?)\s*Resposta:\s*(.+?)(?=Pergunta:|$)/gs;
   let match;
-  
+
   while ((match = regex.exec(text)) !== null) {
     cards.push({
       pergunta: match[1].trim(),
       resposta: match[2].trim()
     });
   }
-  
+
   return cards.length > 0 ? cards : [];
 }
 
@@ -357,19 +410,28 @@ function renderFlashcards() {
   const cardsContainer = document.getElementById('cardsList');
   const navButtons = document.getElementById('navButtons');
   const flash = document.getElementById('flash');
-  
+  const h = JSON.parse(localStorage.getItem('bf_hist') || '[]');
+  const flashcardsHistory = h.find(i => i.type === 'Flashcards');
+
   if (!flash) return;
-  
-  if (!results.flashcards || !results.flashcards.cards || results.flashcards.cards.length === 0) {
+
+  // Verificar se há histórico de flashcards para usar como resultado mais recente
+  let cards = [];
+  if (results.flashcards && results.flashcards.cards && results.flashcards.cards.length > 0) {
+    cards = results.flashcards.cards;
+  } else if (flashcardsHistory && flashcardsHistory.vFormatted && flashcardsHistory.vFormatted.cards) {
+    cards = flashcardsHistory.vFormatted.cards;
+  }
+
+  if (cards.length === 0) {
     flash.innerHTML = '<div style="color: var(--muted); text-align: center;">Gere flashcards no Dashboard</div>';
     if (navButtons) navButtons.style.display = 'none';
     if (cardsContainer) cardsContainer.innerHTML = '';
     return;
   }
-  
-  const cards = results.flashcards.cards;
+
   const firstCard = cards[0];
-  
+
   // Exibir primeiro card no elemento flash
   flash.innerHTML = `
     <div style="text-align: left; width: 100%; cursor: pointer;" id="flash-content">
@@ -391,27 +453,27 @@ function renderFlashcards() {
   flash.dataset.s = 'q';
   flash.dataset.index = 0;
   flash.style.cursor = 'pointer';
-  
+
   // Renderizar lista completa de cards
   if (cardsContainer) {
     cardsContainer.innerHTML = cards.map((card, idx) => `
-      <div class="card-item" style="background: linear-gradient(135deg, var(--panel), var(--panel-2)); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 12px 0; transition: all 0.3s ease; animation: slideIn 0.3s ease;">
-        <div style="color: var(--muted); font-size: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+      <div class="card-item" style="background: linear-gradient(135deg, var(--panel), var(--panel-2)); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin: 6px 0; transition: all 0.3s ease; animation: slideIn 0.3s ease;">
+        <div style="color: var(--muted); font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">🎓</span>
           <span>Card ${idx + 1}/${cards.length}</span>
         </div>
-        <div style="margin-bottom: 12px;">
+        <div style="margin-bottom: 10px;">
           <strong style="color: var(--primary);">❓ Pergunta:</strong>
-          <p style="margin: 8px 0; color: var(--text); line-height: 1.7;">${card.pergunta}</p>
+          <p style="margin: 6px 0; color: var(--text); line-height: 1.6; font-size: 14px;">${card.pergunta}</p>
         </div>
-        <div style="padding-top: 12px; border-top: 1px solid var(--border);">
+        <div style="padding-top: 10px; border-top: 1px solid var(--border);">
           <strong style="color: var(--primary);">✅ Resposta:</strong>
-          <p style="margin: 8px 0; color: var(--text); line-height: 1.7;">${card.resposta}</p>
+          <p style="margin: 6px 0; color: var(--text); line-height: 1.6; font-size: 14px;">${card.resposta}</p>
         </div>
       </div>
     `).join('');
   }
-  
+
   // Mostrar botões de navegacao
   if (navButtons) {
     navButtons.style.display = 'flex';
@@ -431,19 +493,19 @@ let currentCardIndex = 0;
 function flip() {
   const el = document.getElementById('flash');
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
-  
+
   if (!results.flashcards || !results.flashcards.cards || results.flashcards.cards.length === 0) {
     el.innerHTML = '<div style="color: var(--muted); text-align: center;">Gere flashcards no Dashboard</div>';
     return;
   }
-  
+
   const cards = results.flashcards.cards;
   const currentIndex = parseInt(el.dataset.index || 0);
   const card = cards[currentIndex];
   const answerDiv = document.getElementById(`flash-answer-${currentIndex}`);
-  
+
   el.dataset.s = el.dataset.s === 'q' ? 'a' : 'q';
-  
+
   if (answerDiv) {
     if (el.dataset.s === 'a') {
       answerDiv.style.opacity = '1';
@@ -458,17 +520,17 @@ function flip() {
 function nextCard() {
   const el = document.getElementById('flash');
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
-  
+
   if (!results.flashcards || !results.flashcards.cards) return;
-  
+
   const cards = results.flashcards.cards;
   let currentIndex = parseInt(el.dataset.index || 0);
-  
+
   if (currentIndex < cards.length - 1) {
     currentIndex++;
     el.dataset.index = currentIndex;
     el.dataset.s = 'q';
-    
+
     const card = cards[currentIndex];
     el.innerHTML = `
       <div style="text-align: left; width: 100%; cursor: pointer;">
@@ -494,17 +556,17 @@ function nextCard() {
 function prevCard() {
   const el = document.getElementById('flash');
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
-  
+
   if (!results.flashcards || !results.flashcards.cards) return;
-  
+
   const cards = results.flashcards.cards;
   let currentIndex = parseInt(el.dataset.index || 0);
-  
+
   if (currentIndex > 0) {
     currentIndex--;
     el.dataset.index = currentIndex;
     el.dataset.s = 'q';
-    
+
     // Atualizar conteúdo do flash
     const card = cards[currentIndex];
     el.innerHTML = `
@@ -528,12 +590,12 @@ function prevCard() {
 function resetFlashcards() {
   const el = document.getElementById('flash');
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
-  
+
   if (!results.flashcards || !results.flashcards.cards || results.flashcards.cards.length === 0) {
     el.innerHTML = '<div style="color: var(--muted);">Gere flashcards no Dashboard</div>';
     return;
   }
-  
+
   const cards = results.flashcards.cards;
   const card = cards[0];
   el.dataset.index = 0;
@@ -562,15 +624,22 @@ function renderResults() {
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
 
   if (window.location.href.includes('resumo.html')) {
-    resultDiv.innerHTML = results.resumo
-      ? results.resumo.content
-      : 'Use o Dashboard para gerar.';
+    resultDiv.innerHTML = '';
+    if (results.resumo) {
+      displayResult(resultDiv, results.resumo.content);
+    } else {
+      resultDiv.textContent = 'Use o Dashboard para gerar.';
+    }
   }
 
   else if (window.location.href.includes('perguntas.html')) {
-    resultDiv.innerHTML = results.perguntas
-      ? results.perguntas.content
-      : 'Use o Dashboard para gerar.';
+    resultDiv.innerHTML = '';
+    if (results.perguntas) {
+      const formatted = formatarQuestionario(results.perguntas.content);
+      displayResult(resultDiv, formatted, true);
+    } else {
+      resultDiv.textContent = 'Use o Dashboard para gerar.';
+    }
   }
 
   else if (window.location.href.includes('flashcards.html')) {
@@ -620,17 +689,17 @@ function formatarPerguntas(text) {
   limpo = limpo.replace(/\*\*/g, ''); // Remove markdown bold
   limpo = limpo.replace(/\*\*/g, ''); // Remove markdown itálico
   limpo = limpo.trim();
-  
+
   const linhas = limpo.split('\n').filter(l => l.trim());
   let html = '<div style="line-height: 1.8;">';
-  
+
   linhas.forEach(linha => {
     const linha_limpa = linha.replace(/^[\d.]*\s*/, '').trim(); // Remove números do início
     if (linha_limpa) {
       html += `<div style="margin-bottom: 20px; padding: 12px; border-left: 3px solid #7c5cff; background: rgba(124, 92, 255, 0.1); border-radius: 4px;">${linha_limpa}</div>`;
     }
   });
-  
+
   html += '</div>';
   return html;
 }
@@ -640,20 +709,20 @@ function formatarPerguntasMultipla(text) {
   let limpo = text.replace(/```[\s\S]*?```/g, '');
   limpo = limpo.replace(/\*\*/g, '');
   limpo = limpo.trim();
-  
+
   // Parsear perguntas
   const perguntasRegex = /(\d+)\.\s*([^\n]+)\n([\s\S]*?)(?=(?:\d+\.|$))/g;
   let match;
   const perguntas = [];
-  
+
   while ((match = perguntasRegex.exec(limpo)) !== null) {
     const numero = match[1];
     const pergunta = match[2];
     const conteudo = match[3];
-    
+
     const alternativasRegex = /([A-E])\)\s*([^\n]+)/g;
     const respostaRegex = /Resposta\s*(?:Correta)?\s*[:\-]?\s*([A-E])/i;
-    
+
     const alternativas = [];
     let altMatch;
     while ((altMatch = alternativasRegex.exec(conteudo)) !== null) {
@@ -662,23 +731,23 @@ function formatarPerguntasMultipla(text) {
         texto: altMatch[2].trim()
       });
     }
-    
+
     const respostaMatch = respostaRegex.exec(conteudo);
     const respostaCorreta = respostaMatch ? respostaMatch[1] : '';
-    
+
     if (pergunta && alternativas.length > 0) {
       perguntas.push({ numero, pergunta, alternativas, respostaCorreta });
     }
   }
-  
+
   // Se não encontrou perguntas formatadas, usar formatação simples
   if (perguntas.length === 0) {
     return formatarPerguntas(text);
   }
-  
+
   // Formatar HTML
   let html = '<div style="font-family: Arial, sans-serif;">';
-  
+
   perguntas.forEach((q) => {
     html += `
       <div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(124, 92, 255, 0.05)); 
@@ -709,7 +778,165 @@ function formatarPerguntasMultipla(text) {
       </div>
     `;
   });
+
+  html += '</div>';
+  return html;
+}
+
+// Função para corrigir erros de escrita
+async function corrigirTexto(texto) {
+  if (texto.length < 50) return texto;
+
+  const prompt = `Corrija APENAS erros de ortografia, acentuação e pontuação. Mantenha o conteúdo e sentido original. Retorne APENAS o texto corrigido, sem explicações.
+
+TEXTO:
+${texto}`;
+
+  try {
+    const resultado = await callGeminiAI(prompt);
+    return resultado;
+  } catch (e) {
+    return texto;
+  }
+}
+
+// Função para formatar questionário novo
+function formatarQuestionario(text) {
+  let limpo = text.replace(/```[\s\S]*?```/g, '');
+  limpo = limpo.replace(/\*\*/g, '');
+  limpo = limpo.trim();
+
+  // Extrair título
+  const tituloMatch = limpo.match(/(?:Questionário sobre|Sobre)[^\n]+/i);
+  const titulo = tituloMatch ? tituloMatch[0] : 'Questionário';
+
+  // Separar perguntas do gabarito
+  const gabaritoMatch = limpo.match(/🔑\s*(?:Gabarito|Respostas)[\s\S]+/);
+  const gabaritoSection = gabaritoMatch ? gabaritoMatch[0] : '';
+  const perguntasSection = gabaritoMatch ? limpo.substring(0, gabaritoMatch.index) : limpo;
+
+  // Parsear perguntas
+  const perguntasRegex = /(\d+)\.\s*([^\n]+)\n([\s\S]*?)(?=\n\d+\.|🔑|$)/g;
+  let match;
+  const perguntas = [];
+
+  while ((match = perguntasRegex.exec(perguntasSection)) !== null) {
+    const numero = match[1];
+    const pergunta = match[2].trim();
+    const conteudo = match[3];
+
+    const alternativasRegex = /([A-D])\)\s*([^\n]+)/g;
+    const alternativas = [];
+    let altMatch;
+
+    while ((altMatch = alternativasRegex.exec(conteudo)) !== null) {
+      alternativas.push({
+        letra: altMatch[1],
+        texto: altMatch[2].trim()
+      });
+    }
+
+    if (pergunta && alternativas.length > 0) {
+      perguntas.push({ numero, pergunta, alternativas });
+    }
+  }
+
+  // Parsear respostas do gabarito
+  const respostas = {};
+  let respIdx = 1;
   
+  // Procura por padrão: "Resposta Correta: X" seguido de "Explicação: texto"
+  const linhas = gabaritoSection.split('\n');
+  let letraAtual = '';
+  
+  for (let i = 0; i < linhas.length; i++) {
+    const linha = linhas[i].trim();
+    
+    // Procurar pela resposta correta
+    if (linha.match(/Resposta\s*(?:Correta)?.*[:\-]/i)) {
+      const letraMatch = linha.match(/([A-D])/);
+      if (letraMatch) {
+        letraAtual = letraMatch[1];
+      }
+    }
+    
+    // Procurar pela explicação
+    if (linha.match(/Explicação\s*[:\-]/i)) {
+      // Extrair tudo após "Explicação:"
+      let explicacao = linha.replace(/Explicação\s*[:\-]\s*/i, '').trim();
+      
+      // Se não tem texto após "Explicação:", pega a próxima linha
+      if (!explicacao && i + 1 < linhas.length) {
+        explicacao = linhas[i + 1].trim();
+      }
+      
+      if (letraAtual && explicacao) {
+        respostas[respIdx] = {
+          letra: letraAtual,
+          explicacao: explicacao
+        };
+        respIdx++;
+        letraAtual = '';
+      }
+    }
+  }
+
+  // Gerar HTML
+  let html = `<div style="font-family: Arial, sans-serif;">`;
+  html += `<h2 style="color: #7c5cff; text-align: center; margin-bottom: 30px; font-size: 20px;">${titulo}</h2>`;
+
+  // Seção de perguntas
+  perguntas.forEach((q) => {
+    html += `
+      <div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(124, 92, 255, 0.05)); 
+                  border: 2px solid #7c5cff; 
+                  border-radius: 12px; 
+                  padding: 20px; 
+                  margin-bottom: 20px;">
+        <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">
+          <span style="background: #7c5cff; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; flex-shrink: 0;">${q.numero}</span>
+          <h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600; line-height: 1.4;">${q.pergunta}</h3>
+        </div>
+        <div style="margin-left: 44px;">
+          ${q.alternativas.map(alt => `
+            <div style="padding: 10px 12px; margin-bottom: 8px; background: white; border-left: 4px solid #ddd; border-radius: 4px;">
+              <strong style="color: #7c5cff;">${alt.letra})</strong> <span style="color: #333;">${alt.texto}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  // Seção de gabarito
+  if (Object.keys(respostas).length > 0) {
+    html += `
+      <div style="background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.05)); 
+                  border: 2px solid #34d399; 
+                  border-radius: 12px; 
+                  padding: 20px; 
+                  margin-top: 30px;">
+        <h3 style="color: #34d399; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🔑</span> Gabarito / Respostas
+        </h3>
+        <div style="margin-top: 15px;">
+    `;
+
+    Object.entries(respostas).forEach(([idx, resp]) => {
+      html += `
+        <div style="background: white; border-left: 4px solid #34d399; padding: 12px; margin-bottom: 12px; border-radius: 4px;">
+          <div style="color: #34d399; font-weight: bold; margin-bottom: 6px;">Questão ${idx}: Resposta Correta <strong>${resp.letra}</strong></div>
+          <div style="color: #555; font-size: 14px; line-height: 1.5;">${resp.explicacao}</div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
   html += '</div>';
   return html;
 }
