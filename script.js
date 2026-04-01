@@ -298,75 +298,58 @@ async function gerarPerguntas() {
   showLoader();
   saveMaterial(text);
 
-  // Corrigir erros de escrita do texto
-  const correctedText = await corrigirTexto(text);
+  const prompt = `Crie EXATAMENTE 5 perguntas de múltipla escolha baseadas no texto abaixo.
 
-  const prompt = `Crie um questionário com EXATAMENTE 5 perguntas de múltipla escolha profundas baseadas no seguinte texto.
+FORMATO:
+1. [Pergunta?]
+A) Opção A
+B) Opção B
+C) Opção C
+D) Opção D
+Resposta: A
+Explicação: Texto
 
-REQUISITOS OBRIGATÓRIOS:
-- GERE EXATAMENTE 5 PERGUNTAS numeradas de 1 a 5
-- Cada pergunta deve ter 4 alternativas (A, B, C, D)
-- Apenas UMA resposta correta por pergunta
-- Inclua uma breve EXPLICAÇÃO para cada resposta correta
-- Use linguagem clara e objetiva
+2. [Pergunta?]
+A) Opção A
+B) Opção B
+C) Opção C
+D) Opção D
+Resposta: B
+Explicação: Texto
 
-FORMATO EXATO - SIGA RIGOROSAMENTE:
-Questionário sobre [TEMA PRINCIPAL DO TEXTO]
+3. [Pergunta?]
+A) Opção A
+B) Opção B
+C) Opção C
+D) Opção D
+Resposta: C
+Explicação: Texto
 
-1. Primeira pergunta em formato de questão?
-A) Primeira alternativa
-B) Segunda alternativa
-C) Terceira alternativa
-D) Quarta alternativa
+4. [Pergunta?]
+A) Opção A
+B) Opção B
+C) Opção C
+D) Opção D
+Resposta: D
+Explicação: Texto
 
-2. Segunda pergunta em formato de questão?
-A) Primeira alternativa
-B) Segunda alternativa
-C) Terceira alternativa
-D) Quarta alternativa
-
-3. Terceira pergunta em formato de questão?
-A) Primeira alternativa
-B) Segunda alternativa
-C) Terceira alternativa
-D) Quarta alternativa
-
-4. Quarta pergunta em formato de questão?
-A) Primeira alternativa
-B) Segunda alternativa
-C) Terceira alternativa
-D) Quarta alternativa
-
-5. Quinta pergunta em formato de questão?
-A) Primeira alternativa
-B) Segunda alternativa
-C) Terceira alternativa
-D) Quarta alternativa
-
-🔑 Gabarito / Respostas
-Resposta Correta: A
-Explicação: Explicação clara e concisa sobre por que A é correta
-Resposta Correta: B
-Explicação: Explicação clara e concisa sobre por que B é correta
-Resposta Correta: C
-Explicação: Explicação clara e concisa sobre por que C é correta
-Resposta Correta: D
-Explicação: Explicação clara e concisa sobre por que D é correta
-Resposta Correta: A
-Explicação: Explicação clara e concisa sobre por que A é correta
+5. [Pergunta?]
+A) Opção A
+B) Opção B
+C) Opção C
+D) Opção D
+Resposta: A
+Explicação: Texto
 
 TEXTO:
-${correctedText}
-
-Agora prossiga com o questionário exatamente no formato mostrado acima:`;
+${text}`;
 
   const perguntas = await callGeminiAI(prompt);
-  const perguntasCorrigidas = await corrigirTexto(perguntas);
   hideLoader();
-  const perguntasFormatadas = formatarQuestionario(perguntasCorrigidas);
+  const perguntasFormatadas = formatarQuestionarioSimplificado(perguntas);
   displayResult($('#output'), perguntasFormatadas, true);
-  saveHistory('Perguntas', perguntasCorrigidas, perguntasFormatadas);
-  saveResult('perguntas', perguntasCorrigidas);
+  saveHistory('Perguntas', perguntas, perguntasFormatadas);
+  saveResult('perguntas', perguntas);
   
   // Notificar se ativado
   notifyIfEnabled('✅ Perguntas geradas com sucesso!');
@@ -862,7 +845,114 @@ ${texto}`;
   }
 }
 
-// Função para formatar questionário novo
+// Função para formatar questionário novo (formato simplificado)
+function formatarQuestionarioSimplificado(text) {
+  let limpo = text.replace(/```[\s\S]*?```/g, '');
+  limpo = limpo.replace(/\*\*/g, '');
+  limpo = limpo.trim();
+
+  // Extrair perguntas individuais
+  const perguntasRegex = /(\d+)\.\s*\[?([^\]?\n]+)\]?\n([\s\S]*?)(?=\n\d+\.|$)/g;
+  let match;
+  const perguntas = [];
+  const respostas = {};
+
+  while ((match = perguntasRegex.exec(limpo)) !== null) {
+    const numero = match[1];
+    const pergunta = match[2].trim();
+    const bloco = match[3];
+
+    // Extrair alternativas
+    const alternativasRegex = /([A-D])\)\s*([^\n]+)/g;
+    const alternativas = [];
+    let altMatch;
+    while ((altMatch = alternativasRegex.exec(bloco)) !== null) {
+      alternativas.push({
+        letra: altMatch[1],
+        texto: altMatch[2].trim()
+      });
+    }
+
+    // Extrair resposta correta
+    const respostaMatch = bloco.match(/Resposta\s*[:\-]\s*([A-D])/i);
+    const resposta = respostaMatch ? respostaMatch[1] : '';
+
+    // Extrair explicação
+    const explicacaoMatch = bloco.match(/Explicação\s*[:\-]\s*([^\n]+)/i);
+    const explicacao = explicacaoMatch ? explicacaoMatch[1].trim() : '';
+
+    if (pergunta && alternativas.length === 4 && resposta && explicacao) {
+      perguntas.push({ numero, pergunta, alternativas });
+      respostas[numero] = { letra: resposta, explicacao: explicacao };
+    }
+  }
+
+  // Se não encontrou, retornar mensagem
+  if (perguntas.length === 0) {
+    return '<div style="color: #ff4757; padding: 20px; text-align: center;"><strong>❌ Erro ao gerar perguntas. Tente novamente.</strong></div>';
+  }
+
+  // Gerar HTML
+  let html = `<div style="font-family: Arial, sans-serif;">`;
+  html += `<h2 style="color: #7c5cff; text-align: center; margin-bottom: 30px; font-size: 20px;">📚 Questionário (${perguntas.length} perguntas)</h2>`;
+
+  // Seção de perguntas
+  perguntas.forEach((q) => {
+    html += `
+      <div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(124, 92, 255, 0.05)); 
+                  border: 2px solid #7c5cff; 
+                  border-radius: 12px; 
+                  padding: 20px; 
+                  margin-bottom: 20px;">
+        <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">
+          <span style="background: #7c5cff; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; flex-shrink: 0;">${q.numero}</span>
+          <h3 style="margin: 0; color: #333; font-size: 15px; font-weight: 600; line-height: 1.4;">${q.pergunta}</h3>
+        </div>
+        <div style="margin-left: 44px;">
+          ${q.alternativas.map(alt => `
+            <div style="padding: 10px 12px; margin-bottom: 8px; background: white; border-left: 4px solid #ddd; border-radius: 4px;">
+              <strong style="color: #7c5cff;">${alt.letra})</strong> <span style="color: #333;">${alt.texto}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  // Seção de gabarito
+  if (Object.keys(respostas).length > 0) {
+    html += `
+      <div style="background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(52, 211, 153, 0.05)); 
+                  border: 2px solid #34d399; 
+                  border-radius: 12px; 
+                  padding: 20px; 
+                  margin-top: 30px;">
+        <h3 style="color: #34d399; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🔑</span> Gabarito / Respostas
+        </h3>
+        <div style="margin-top: 15px;">
+    `;
+
+    Object.entries(respostas).forEach(([idx, resp]) => {
+      html += `
+        <div style="background: white; border-left: 4px solid #34d399; padding: 12px; margin-bottom: 12px; border-radius: 4px;">
+          <div style="color: #34d399; font-weight: bold; margin-bottom: 6px;">Questão ${idx}: Resposta Correta <strong>${resp.letra}</strong></div>
+          <div style="color: #555; font-size: 14px; line-height: 1.5;">${resp.explicacao}</div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Função para formatar questionário antigo (mantida para compatibilidade)
 function formatarQuestionario(text) {
   let limpo = text.replace(/```[\s\S]*?```/g, '');
   limpo = limpo.replace(/\*\*/g, '');
