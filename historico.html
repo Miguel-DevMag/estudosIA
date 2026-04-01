@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Histórico</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <aside class="sidebar">
     <div class="brand"><img src="img/logo.png" alt="logo">EstudosIA</div>
@@ -19,8 +17,7 @@
       <a class="active" href="historico.html"><img src="img/file.png" alt="Histórico">Histórico</a>
       <div class="nav-bottom">
         <a href="configuracao.html"><img src="img/setting.png" alt="Configuração">Configuração</a>
-        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png"
-            alt="Tema"><span id="theme-text">Dark</span></a>
+        <a href="#" class="theme-btn" onclick="toggleTheme()"><img id="theme-icon" src="img/night-mode.png" alt="Tema"><span id="theme-text">Dark</span></a>
       </div>
     </nav>
   </aside>
@@ -34,8 +31,10 @@
     <div class="card">
       <h3>Últimas Gerações</h3>
       <ul id="hist" class="list"></ul>
-      <button class="btn secondary" onclick="limparHistorico()" style="margin-top: 15px; width: 100%;">Limpar
-        Histórico</button>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn secondary" onclick="limparHistorico()" style="flex: 1;">🗑️ Limpar Histórico</button>
+        <button class="btn secondary btn-danger" onclick="limparTudo()" style="flex: 1;">⚠️ Limpar Tudo</button>
+      </div>
     </div>
 
     <div class="card" style="margin-top: 20px;">
@@ -46,11 +45,20 @@
 
   <script src="script.js"></script>
   <script>
-    function limparHistorico() {
-      if (confirm('Tem certeza que deseja limpar o histórico?')) {
+    function limparHistorico(){
+      if(confirm('Tem certeza que deseja limpar o histórico?')){
         localStorage.removeItem('bf_hist');
         document.getElementById('hist').innerHTML = '<li style="color: var(--muted);">Histórico vazio</li>';
-        alert('Histórico limpo');
+        alert('Histórico limpo com sucesso!');
+        location.reload();
+      }
+    }
+
+    function limparTudo(){
+      if(confirm('⚠️ AVISO: Isso vai limpar TODOS os dados! Tem certeza?')){
+        localStorage.clear();
+        alert('Todos os dados foram limpos');
+        location.reload();
       }
     }
 
@@ -58,7 +66,7 @@
       renderHistory();
       const materials = JSON.parse(localStorage.getItem('estudos_materiais') || '[]');
       const matList = document.getElementById('materiais');
-      if (materials.length === 0) {
+      if(materials.length === 0){
         matList.innerHTML = '<li style="color: var(--muted);">Nenhum material salvo</li>';
       } else {
         matList.innerHTML = materials.map((m, i) => `<li><strong>Material ${i + 1}</strong> — ${m.created}<br/><small>${m.text.substring(0, 100)}...</small></li>`).join('');
@@ -66,5 +74,4 @@
     });
   </script>
 </body>
-
 </html>
