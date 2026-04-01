@@ -91,9 +91,18 @@ function renderResults() {
   if (!resultDiv) return;
   const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
   if (resultDiv.id === 'output' && window.location.href.includes('resumo.html')) {
-    resultDiv.textContent = results.resumo ? results.resumo.content : 'Use o Dashboard para gerar.';
+    if (results.resumo) {
+      displayResult(resultDiv, results.resumo.content);
+    } else {
+      resultDiv.textContent = 'Use o Dashboard para gerar.';
+    }
   } else if (resultDiv.id === 'output' && window.location.href.includes('perguntas.html')) {
-    resultDiv.textContent = results.perguntas ? results.perguntas.content : 'Use o Dashboard para gerar.';
+    if (results.perguntas) {
+      const perguntasFormatadas = formatarPerguntasMultipla(results.perguntas.content);
+      displayResult(resultDiv, perguntasFormatadas, true);
+    } else {
+      resultDiv.textContent = 'Use o Dashboard para gerar.';
+    }
   }
 }
 
@@ -168,9 +177,13 @@ function fallbackGenerate(prompt) {
   }
 
   if (prompt.toLowerCase().includes('perguntas')) {
-    return sentences.slice(0, 3).map((s, i) =>
-      `${i + 1}. Qual a importância de: "${s.slice(0, 50)}..."?`
-    ).join('\n');
+    return sentences.slice(0, 5).map((s, i) => {
+      const palavrasChave = s.split(' ').filter(p => p.length > 4);
+      const alt1 = palavrasChave[0] || 'Conceito 1';
+      const alt2 = palavrasChave[1] || 'Conceito 2';
+      const alt3 = palavrasChave[2] || 'Conceito 3';
+      return `${i + 1}. Qual é o conceito principal relacionado a "${s.slice(0, 40)}..."?\nA) ${alt1}\nB) ${alt2}\nC) ${alt3}\nD) Nenhuma das anteriores\nE) Todas as anteriores\nResposta Correta: A`;
+    }).join('\n\n');
   }
 
   if (prompt.toLowerCase().includes('flashcard')) {
@@ -191,14 +204,23 @@ async function gerarResumo() {
   }
   showLoader();
   saveMaterial(text);
-  const prompt = `Crie um resumo conciso e bem estruturado do seguinte texto em 3-4 linhas:\n\n${text}`;
+  const prompt = `Análise profunda: Crie um resumo bem estruturado e completo do seguinte texto.
+
+REQUISITOS:
+- Resuma os conceitos principais de forma clara e compreensível
+- Use linguagem fluida, sem listas numeradas ou pontos
+- Organize em parágrafos bem estruturados
+- Explore as ideias centrais e suas conexões
+- Mantenha a essência e o contexto do texto original
+- Escreva de forma natural e profissional
+
+TEXTO A RESUMIR:
+${text}
+
+Resumo:`;
   const resumo = await callGeminiAI(prompt);
   hideLoader();
-  const highlighted = highlightText(resumo);
- typeWriter($('#output'), highlighted);
-  setTimeout(() => {
-    $('#output').innerHTML = highlighted;
-  }, 300);
+  displayResult($('#output'), resumo);
   saveHistory('Resumo', resumo);
   saveResult('resumo', resumo);
 }
@@ -211,14 +233,33 @@ async function gerarPerguntas() {
     return;
   }
   showLoader();
-  const prompt = `Gere 5 perguntas de estudo importantes sobre o seguinte texto:\n\n${text}\n\nFormate como lista numerada.`;
+  const prompt = `Crie perguntas de múltipla escolha profundas e significativas baseadas no seguinte texto.
+
+REQUISITOS:
+- Gere entre 5 e 8 perguntas de múltipla escolha sobre os conceitos principais
+- Cada pergunta deve ter 5 alternativas (A, B, C, D, E)
+- Apenas UMA resposta correta por pergunta
+- As perguntas devem variar em dificuldade
+- Use linguagem clara e objetiva
+- Explore conceitos conceituais, analíticos e aplicados
+
+FORMATO EXATO para cada pergunta:
+NÚMERO. Pergunta?
+A) Alternativa 1
+B) Alternativa 2
+C) Alternativa 3
+D) Alternativa 4
+E) Alternativa 5
+Resposta Correta: (Letra)
+
+TEXTO:
+${text}
+
+Perguntas:`;
   const perguntas = await callGeminiAI(prompt);
   hideLoader();
-  const highlighted = highlightText(perguntas);
- typeWriter($('#output'), highlighted);
-  setTimeout(() => {
-    $('#output').innerHTML = highlighted;
-  }, 300);
+  const perguntasFormatadas = formatarPerguntasMultipla(perguntas);
+  displayResult($('#output'), perguntasFormatadas, true);
   saveHistory('Perguntas', perguntas);
   saveResult('perguntas', perguntas);
 }
@@ -522,13 +563,13 @@ function renderResults() {
 
   if (window.location.href.includes('resumo.html')) {
     resultDiv.innerHTML = results.resumo
-      ? highlightText(results.resumo.content)
+      ? results.resumo.content
       : 'Use o Dashboard para gerar.';
   }
 
   else if (window.location.href.includes('perguntas.html')) {
     resultDiv.innerHTML = results.perguntas
-      ? highlightText(results.perguntas.content)
+      ? results.perguntas.content
       : 'Use o Dashboard para gerar.';
   }
 
@@ -541,7 +582,7 @@ function renderResults() {
     }
   }
 }
-function typeWriter(element, text, speed = 15) {
+function typeWriter(element, text, speed = 25) {
   element.innerHTML = '';
   let i = 0;
 
@@ -555,15 +596,122 @@ function typeWriter(element, text, speed = 15) {
 
   typing();
 }
-function highlightText(text) {
-  const keywords = text.split(' ').filter(w => w.length > 6);
 
-  return text.split(' ').map(word => {
-    if (keywords.includes(word)) {
-      return `<span style="color:#7c5cff;font-weight:bold">${word}</span>`;
+function displayResult(element, text, isFormatted = false) {
+  if (isFormatted) {
+    element.innerHTML = text;
+  } else {
+    // Limpar o elemento e adicionar o texto sem HTML
+    element.innerHTML = '';
+    const paragraphs = text.split('\n\n').filter(p => p.trim());
+    paragraphs.forEach(para => {
+      const p = document.createElement('p');
+      p.textContent = para.trim();
+      p.style.lineHeight = '1.8';
+      p.style.marginBottom = '16px';
+      element.appendChild(p);
+    });
+  }
+}
+
+function formatarPerguntas(text) {
+  // Remove qualquer formatação markdown ou HTML que a IA possa ter adicionado
+  let limpo = text.replace(/```[\s\S]*?```/g, ''); // Remove code blocks
+  limpo = limpo.replace(/\*\*/g, ''); // Remove markdown bold
+  limpo = limpo.replace(/\*\*/g, ''); // Remove markdown itálico
+  limpo = limpo.trim();
+  
+  const linhas = limpo.split('\n').filter(l => l.trim());
+  let html = '<div style="line-height: 1.8;">';
+  
+  linhas.forEach(linha => {
+    const linha_limpa = linha.replace(/^[\d.]*\s*/, '').trim(); // Remove números do início
+    if (linha_limpa) {
+      html += `<div style="margin-bottom: 20px; padding: 12px; border-left: 3px solid #7c5cff; background: rgba(124, 92, 255, 0.1); border-radius: 4px;">${linha_limpa}</div>`;
     }
-    return word;
-  }).join(' ');
+  });
+  
+  html += '</div>';
+  return html;
+}
+
+function formatarPerguntasMultipla(text) {
+  // Remove code blocks e markdown
+  let limpo = text.replace(/```[\s\S]*?```/g, '');
+  limpo = limpo.replace(/\*\*/g, '');
+  limpo = limpo.trim();
+  
+  // Parsear perguntas
+  const perguntasRegex = /(\d+)\.\s*([^\n]+)\n([\s\S]*?)(?=(?:\d+\.|$))/g;
+  let match;
+  const perguntas = [];
+  
+  while ((match = perguntasRegex.exec(limpo)) !== null) {
+    const numero = match[1];
+    const pergunta = match[2];
+    const conteudo = match[3];
+    
+    const alternativasRegex = /([A-E])\)\s*([^\n]+)/g;
+    const respostaRegex = /Resposta\s*(?:Correta)?\s*[:\-]?\s*([A-E])/i;
+    
+    const alternativas = [];
+    let altMatch;
+    while ((altMatch = alternativasRegex.exec(conteudo)) !== null) {
+      alternativas.push({
+        letra: altMatch[1],
+        texto: altMatch[2].trim()
+      });
+    }
+    
+    const respostaMatch = respostaRegex.exec(conteudo);
+    const respostaCorreta = respostaMatch ? respostaMatch[1] : '';
+    
+    if (pergunta && alternativas.length > 0) {
+      perguntas.push({ numero, pergunta, alternativas, respostaCorreta });
+    }
+  }
+  
+  // Se não encontrou perguntas formatadas, usar formatação simples
+  if (perguntas.length === 0) {
+    return formatarPerguntas(text);
+  }
+  
+  // Formatar HTML
+  let html = '<div style="font-family: Arial, sans-serif;">';
+  
+  perguntas.forEach((q) => {
+    html += `
+      <div style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(124, 92, 255, 0.05)); 
+                  border: 2px solid #7c5cff; 
+                  border-radius: 12px; 
+                  padding: 20px; 
+                  margin-bottom: 25px; 
+                  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.15);">
+        <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">
+          <span style="background: #7c5cff; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; flex-shrink: 0;">${q.numero}</span>
+          <h3 style="margin: 0; color: #333; font-size: 16px; font-weight: 600; line-height: 1.4;">${q.pergunta}</h3>
+        </div>
+        
+        <div style="margin-left: 44px; margin-bottom: 18px;">
+          ${q.alternativas.map(alt => `
+            <div style="padding: 10px 14px; margin-bottom: 10px; background: white; border-left: 4px solid #ddd; border-radius: 4px; transition: all 0.2s;">
+              <strong style="color: #7c5cff;">${alt.letra})</strong> <span style="color: #333;">${alt.texto}</span>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="margin-left: 44px; padding-top: 15px; border-top: 1px solid rgba(124, 92, 255, 0.2);">
+          <div style="color: #7c5cff; font-weight: bold; font-size: 14px; margin-bottom: 6px;">✓ Resposta Correta:</div>
+          <div style="color: #333; font-size: 15px; padding: 8px 12px; background: rgba(124, 92, 255, 0.1); border-radius: 4px; display: inline-block; border-left: 3px solid #7c5cff;">
+            <strong>${q.respostaCorreta}</strong>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  return html;
 }
 
 const pdfInput = document.getElementById('pdfInput');
