@@ -1064,6 +1064,45 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Funções de limpeza de dados
+function limparHistorico() {
+  if (confirm('🗑️ Tem certeza que deseja limpar o HISTÓRICO de gerações?')) {
+    localStorage.removeItem('bf_hist');
+    alert('✅ Histórico deletado com sucesso!');
+    location.reload();
+  }
+}
+
+function limparMateriais() {
+  if (confirm('📄 Tem certeza que deseja limpar os MATERIAIS salvos?')) {
+    localStorage.removeItem('estudos_materiais');
+    alert('✅ Materiais deletados com sucesso!');
+    location.reload();
+  }
+}
+
+function limparTudo() {
+  if (confirm('⚠️ AVISO: Isso vai limpar TODOS os dados! Tem certeza?')) {
+    localStorage.clear();
+    alert('✅ Todos os dados foram limpos');
+    location.reload();
+  }
+}
+
+function exportarDados() {
+  const materials = localStorage.getItem('estudos_materiais');
+  const hist = localStorage.getItem('bf_hist');
+  const results = localStorage.getItem('estudos_resultados');
+  const data = { materiais: JSON.parse(materials || '[]'), historico: JSON.parse(hist || '[]'), resultados: JSON.parse(results || '{}') };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'estudos_backup_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  alert('✅ Backup exportado com sucesso!');
+}
+
 const pdfInput = document.getElementById('pdfInput');
 
 if (pdfInput) {

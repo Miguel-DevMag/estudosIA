@@ -59,11 +59,10 @@
       </div>
 
       <h3 class="h3-section">Dados</h3>
-      <button class="btn btn-full" onclick="exportarDados()">Exportar
-        Dados</button>
-      <button class="btn secondary btn-full" onclick="limparHistorico()">Limpar Histórico</button>
-      <button class="btn secondary btn-full btn-danger" onclick="limparTudo()">Limpar
-        Tudo</button>
+      <button class="btn btn-full" onclick="exportarDados()" style="margin-bottom: 10px;">📥 Exportar Dados</button>
+      <button class="btn secondary btn-full" onclick="limparHistorico()" style="margin-bottom: 10px;">🗑️ Limpar Histórico</button>
+      <button class="btn secondary btn-full" onclick="limparMateriais()" style="margin-bottom: 10px;">📄 Limpar Materiais</button>
+      <button class="btn secondary btn-full btn-danger" onclick="limparTudo()">⚠️ Limpar Tudo</button>
     </div>
 
     <div class="card card-danger">
@@ -109,22 +108,7 @@
       a.href = url;
       a.download = 'estudos_backup_' + new Date().toISOString().split('T')[0] + '.json';
       a.click();
-    }
-
-    function limparHistorico() {
-      if (confirm('Tem certeza que deseja limpar o histórico?')) {
-        localStorage.removeItem('bf_hist');
-        updateStats();
-        alert('Histórico limpo');
-      }
-    }
-
-    function limparTudo() {
-      if (confirm('AVISO: Isso vai limpar TODOS os dados! Tem certeza?')) {
-        localStorage.clear();
-        alert('Todos os dados foram limpos');
-        location.reload();
-      }
+      alert('✅ Backup exportado com sucesso!');
     }
 
     window.addEventListener('DOMContentLoaded', loadPreferences);
