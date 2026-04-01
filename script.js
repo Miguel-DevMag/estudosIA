@@ -54,6 +54,15 @@ function getMaterials() {
   return JSON.parse(localStorage.getItem(MATERIALS_KEY) || '[]');
 }
 
+function deleteMaterial(idx) {
+  if (confirm('✅ Tem certeza que deseja deletar este material?')) {
+    const materials = JSON.parse(localStorage.getItem(MATERIALS_KEY) || '[]');
+    materials.splice(idx, 1);
+    localStorage.setItem(MATERIALS_KEY, JSON.stringify(materials));
+    location.reload();
+  }
+}
+
 
 function saveHistory(type, content, contentFormatted = content) {
   const h = JSON.parse(localStorage.getItem('bf_hist') || '[]');
@@ -83,16 +92,35 @@ function renderHistory() {
   if (window.location.href.includes('resumo.html')) tipoPagina = 'Resumo';
   else if (window.location.href.includes('perguntas.html')) tipoPagina = 'Perguntas';
   else if (window.location.href.includes('flashcards.html')) tipoPagina = 'Flashcards';
- const filtrado = h
-  .map((item, index) => ({ ...item, originalIndex: index }))
-  .filter(i => i.type === tipoPagina);
+  else if (window.location.href.includes('historico.html')) tipoPagina = '';
+  
+  let items;
+  if (tipoPagina === '') {
+    items = h.map((item, index) => ({ ...item, originalIndex: index }));
+  } else {
+    items = h
+      .map((item, index) => ({ ...item, originalIndex: index }))
+      .filter(i => i.type === tipoPagina);
+  }
 
-  el.innerHTML = filtrado.map((i) =>
-  `<li onclick="loadHistoricResult(${i.originalIndex}, '${tipoPagina}')"
-      style="cursor: pointer;">
-    <strong>${i.type}</strong> — ${new Date(i.t).toLocaleString()}
+  el.innerHTML = items.map((i) =>
+  `<li style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px; hover-effect;">
+    <span onclick="loadHistoricResult(${i.originalIndex}, '${i.type}')" style="cursor: pointer; flex: 1;">
+      <strong>${i.type}</strong> — ${new Date(i.t).toLocaleString()}
+    </span>
+    <button class="btn-delete" onclick="deleteHistoricItem(${i.originalIndex})" style="margin-left: 10px; padding: 4px 8px; background: #ff4757; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️</button>
   </li>`
 ).join('');
+}
+
+function deleteHistoricItem(idx) {
+  if (confirm('✅ Tem certeza que deseja deletar este item?')) {
+    const h = JSON.parse(localStorage.getItem('bf_hist') || '[]');
+    h.splice(idx, 1);
+    localStorage.setItem('bf_hist', JSON.stringify(h));
+    renderHistory();
+    alert('✅ Item deletado com sucesso!');
+  }
 }
 
 function loadHistoricResult(idx, type) {

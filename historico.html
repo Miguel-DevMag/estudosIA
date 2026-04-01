@@ -69,7 +69,7 @@
       if(materials.length === 0){
         matList.innerHTML = '<li style="color: var(--muted);">Nenhum material salvo</li>';
       } else {
-        matList.innerHTML = materials.map((m, i) => `<li><strong>Material ${i + 1}</strong> — ${m.created}<br/><small>${m.text.substring(0, 100)}...</small></li>`).join('');
+        matList.innerHTML = materials.map((m, i) => `<li style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px;"><span style="flex: 1;"><strong>Material ${i + 1}</strong> — ${m.created}<br/><small>${m.text.substring(0, 100)}...</small></span><button onclick="deleteMaterial(${i})" style="margin-left: 10px; padding: 4px 8px; background: #ff4757; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">🗑️</button></li>`).join('');
       }
     });
   </script>
