@@ -1,491 +1,510 @@
 :root {
-    --bg: #0b0f17;
-    --panel: #121826;
-    --panel-2: #0f1522;
-    --text: #e6e9ef;
-    --muted: #9aa4b2;
-    --primary: #7c5cff;
-    --primary-2: rgb(46 0 235 / 54%);
-    --border: rgba(255, 255, 255, 0.342);
-    --radius: 14px;
+  --bg: #0b0f17;
+  --panel: #121826;
+  --panel-2: #0f1522;
+  --text: #e6e9ef;
+  --muted: #9aa4b2;
+  --primary: #7c5cff;
+  --primary-2: rgb(46 0 235 / 54%);
+  --border: rgba(255, 255, 255, 0.342);
+  --radius: 14px;
 }
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html,
 body {
-    height: 100%;
-    transition: background-color 0.3s ease, color 0.3s ease;
+  height: 100%;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 body {
-    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    background: radial-gradient(1200px 600px at 80% -10%, rgba(124, 92, 255, .15), transparent), var(--bg);
-    color: var(--text);
-    display: flex;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial;
+  background:
+    radial-gradient(
+      1200px 600px at 80% -10%,
+      rgba(124, 92, 255, 0.15),
+      transparent
+    ),
+    var(--bg);
+  color: var(--text);
+  display: flex;
 }
 
 a {
-    color: inherit;
-    text-decoration: none
+  color: inherit;
+  text-decoration: none;
 }
 
 .sidebar {
-    width: 240px;
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border-right: 1px solid var(--border);
-    padding: 22px;
-    position: fixed;
-    inset: 0 auto 0 0;
-    transition: all 0.3s ease;
-    z-index: 1000;
+  width: 240px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border-right: 1px solid var(--border);
+  padding: 22px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
 }
 
 .brand {
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: .4px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.4px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .brand img {
-    width: 55px;
-    object-fit: contain;
-    
+  width: 55px;
+  object-fit: contain;
 }
 
 .nav a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 5px 0px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    color: var(--muted);
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  transition: all 0.2s ease;
 }
 
 .nav a img {
-    width: 20px;
-    height: 20px;
-    opacity: 0.7;
-    transition: opacity 0.2s ease, filter 0.2s ease;
-    filter: brightness(0) invert(1);
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+  filter: brightness(0) invert(1);
 }
 
 .nav a.active img,
 .nav a:hover img {
-    opacity: 1;
-    filter: brightness(0) invert(1);
+  opacity: 1;
+  filter: brightness(0) invert(1);
 }
 
 .nav a.active,
 .nav a:hover {
-    background: rgb(46 0 235 / 54%);
-    color: #ffffff;
+  background: rgb(46 0 235 / 54%);
+  color: #ffffff;
 }
 
 .theme-btn {
-    transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .nav-bottom {
-    position: absolute;
-    bottom: 22px;
-    left: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: calc(100% - 44px);
+  position: absolute;
+  bottom: 22px;
+  left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: calc(100% - 44px);
 }
 
 .nav-bottom a {
-    font-size: 13px;
+  font-size: 13px;
 }
 
 .main {
-    margin-left: 240px;
-    padding: 28px;
-    width: 100%;
-    transition: margin-left 0.3s ease;
+  margin-left: 240px;
+  padding: 28px;
+  width: 100%;
+  transition: margin-left 0.3s ease;
 }
 
 .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
 .title {
-    font-size: 26px;
-    font-weight: 700
+  font-size: 26px;
+  font-weight: 700;
 }
 
 .grid {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 1.4fr 1fr;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1.4fr 1fr;
 }
 
 .card {
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
-    transition: all 0.3s ease;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
 }
 
 .card:hover {
-    border-color: var(--primary);
-    box-shadow: 0 10px 30px rgba(124, 92, 255, .15);
+  border-color: var(--primary);
+  box-shadow: 0 10px 30px rgba(124, 92, 255, 0.15);
 }
 
 .card h3 {
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 10px;
-    transition: color 0.3s ease;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  transition: color 0.3s ease;
 }
 
 .textarea {
-    width: 100%;
-    min-height: 160px;
-    resize: vertical;
-    background: #ffffff2c;
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 12px;
-    padding: 12px;
-    transition: all 0.3s ease;
-    font-family: inherit;
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  background: #ffffff2c;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.3s ease;
+  font-family: inherit;
 }
 
 .textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(124, 92, 255, .1);
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.1);
 }
 .pdf {
-    border: none;
-    background: transparent;
-    color:#b3acac;
-    margin-top: 10px;
-
+  border: none;
+  background: transparent;
+  color: #b3acac;
+  margin-top: 10px;
 }
 
 .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 12px
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .btn {
-    background: linear-gradient(135deg, var(--primary), var(--primary-2));
-    border: none;
-    color: white;
-    padding: 10px 14px;
-    border-radius: 10px;
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(124, 92, 255, .35);
-    transition: all 0.2s ease;
-    font-weight: 500;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  border: none;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(124, 92, 255, 0.35);
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(124, 92, 255, .45);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.45);
 }
 
 .btn:active {
-    transform: scale(.98)
+  transform: scale(0.98);
 }
 
 .btn.secondary {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    box-shadow: none;
-    display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: none;
+  display: none;
 }
 
 .btn.secondary:hover {
-    background: rgba(124, 92, 255, .08);
+  background: rgba(124, 92, 255, 0.08);
 }
 
 .output {
-    white-space: pre-wrap;
-    line-height: 1.6;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    max-height: 600px;
-    overflow-y: auto;
-    color: var(--text);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  max-height: 600px;
+  overflow-y: auto;
+  color: var(--text);
 }
 
 /* Scroll profissional */
 .output::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 .output::-webkit-scrollbar-track {
-    background: rgba(124, 92, 255, 0.1);
-    border-radius: 10px;
+  background: rgba(124, 92, 255, 0.1);
+  border-radius: 10px;
 }
 
 .output::-webkit-scrollbar-thumb {
-    background: #7c5cff;
-    border-radius: 10px;
-    transition: background 0.3s ease;
+  background: #7c5cff;
+  border-radius: 10px;
+  transition: background 0.3s ease;
 }
 
 .output::-webkit-scrollbar-thumb:hover {
-    background: #9d7fff;
+  background: #9d7fff;
 }
 
 .pref-item {
-    margin: 20px 0;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border);
+  margin: 20px 0;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
 }
 
 .pref-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
 }
 
 .pref-desc {
-    color: var(--muted);
+  color: var(--muted);
 }
 
 .pref-select {
-    width: 100%;
-    padding: 8px;
-    margin-top: 8px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    cursor: pointer;
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .btn-full {
-    display: block;
-    width: 100%;
-    margin-bottom: 10px;
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
 }
 
 .btn-danger {
-    color: #ff6b6b;
+  color: #ff6b6b;
 }
 
 .card-danger {
-    background: rgba(255, 107, 107, 0.1);
-    border-color: rgba(255, 107, 107, 0.3);
-    margin-top: 20px;
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.3);
+  margin-top: 20px;
 }
 
 .h3-danger {
-    color: #ff6b6b;
+  color: #ff6b6b;
 }
 
 .h3-section {
-    margin-top: 30px;
-    margin-bottom: 15px;
+  margin-top: 30px;
+  margin-bottom: 15px;
 }
 
 .p-system-info {
-    margin: 10px 0;
-    color: var(--muted);
+  margin: 10px 0;
+  color: var(--muted);
 }
 
 .flash {
-    min-height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    line-height: 1.6;
-    text-align: center;
-    padding: 30px;
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1.6;
+  text-align: center;
+  padding: 30px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .card-item {
-    animation: slideIn 0.3s ease;
+  animation: slideIn 0.3s ease;
 }
 
 @keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 body.light {
-    --bg: #f5f5f5;
-    --panel: #ffffff;
-    --panel-2: #f9f9f9;
-    --text: #1a1a1a;
-    --muted: #666666;
-    --border: rgba(0, 0, 0, 0.1);
-    background: radial-gradient(1200px 600px at 80% -10%, rgba(124, 92, 255, .1), transparent), var(--bg);
+  --bg: #f5f5f5;
+  --panel: #ffffff;
+  --panel-2: #f9f9f9;
+  --text: #1a1a1a;
+  --muted: #666666;
+  --border: rgba(0, 0, 0, 0.1);
+  background:
+    radial-gradient(
+      1200px 600px at 80% -10%,
+      rgba(124, 92, 255, 0.1),
+      transparent
+    ),
+    var(--bg);
 }
 
 body.light .nav a:hover,
 body.light .nav a.active {
-    background: rgba(124, 92, 255, 0.15);
-    color: #1a1a1a;
+  background: rgba(124, 92, 255, 0.15);
+  color: #1a1a1a;
 }
 
 body.light .nav a img {
-    filter: brightness(0);
+  filter: brightness(0);
 }
 
 .loader {
-    height: 8px;
-    border-radius: 999px;
-    overflow: hidden;
-    background: #0b1220;
-    border: 1px solid var(--border);
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #0b1220;
+  border: 1px solid var(--border);
 }
 
 .loader::after {
-    content: "";
-    display: block;
-    height: 100%;
-    width: 40%;
-    background: linear-gradient(90deg, transparent, var(--primary), transparent);
-    animation: load 1.2s infinite;
+  content: "";
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation: load 1.2s infinite;
 }
 
 @keyframes load {
-    from {
-        transform: translateX(-100%)
-    }
+  from {
+    transform: translateX(-100%);
+  }
 
-    to {
-        transform: translateX(250%)
-    }
+  to {
+    transform: translateX(250%);
+  }
 }
 
 .flash {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 180px;
-    font-size: 18px;
-    text-align: center;
-    cursor: pointer;
-    background: rgba(124, 92, 255, 0.1);
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  font-size: 18px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(124, 92, 255, 0.1);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  padding: 20px;
 }
 
 .flash:hover {
-    border-color: var(--primary);
-    background: rgba(124, 92, 255, 0.15);
+  border-color: var(--primary);
+  background: rgba(124, 92, 255, 0.15);
 }
 
 .list {
-    list-style: none;
+  list-style: none;
 }
 
 .list li {
-    padding: 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--muted);
-    transition: all 0.2s ease;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.2s ease;
 }
 
 .list li:hover {
-    background: rgba(124, 92, 255, .05);
-    color: var(--text);
+  background: rgba(124, 92, 255, 0.05);
+  color: var(--text);
 }
 
 .light {
-    --bg: #f5f7fb;
-    --panel: #ffffff;
-    --panel-2: #ffffff;
-    --text: #0b1220;
-    --muted: #5b6472;
-    --border: rgba(0, 0, 0, .08);
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --panel-2: #ffffff;
+  --text: #0b1220;
+  --muted: #5b6472;
+  --border: rgba(0, 0, 0, 0.08);
 }
 
 .output span {
-    animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.5s ease forwards;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 900px) {
+  .btn.secondary {
+    display: block;
+  }
 
-    .btn.secondary {
-        display: block;
-    }
+  .sidebar {
+    position: fixed;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
 
-    .sidebar {
-        position: fixed;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-    }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  }
 
-    .sidebar.open {
-        transform: translateX(0);
-        box-shadow: 0 0 30px rgba(0, 0, 0, .5);
-    }
+  .main {
+    margin-left: 0;
+  }
 
-    .main {
-        margin-left: 0
-    }
+  .grid {
+    grid-template-columns: 1fr;
+  }
 
-    .grid {
-        grid-template-columns: 1fr
-    }
+  .nav-bottom {
+    flex-direction: row;
+    gap: 5px;
+  }
 
-    .nav-bottom {
-        flex-direction: row;
-        gap: 5px;
-    }
-
-    .nav-bottom a {
-        flex: 1;
-        text-align: center;
-        padding: 8px 2px;
-        align-items: center;
-        justify-content: center;
-    }
+  .nav-bottom a {
+    flex: 1;
+    text-align: center;
+    padding: 8px 2px;
+    align-items: center;
+    justify-content: center;
+  }
 }
